@@ -87,6 +87,7 @@
     padding:11px 10px;font-size:16px;background:#fff;color:var(--ink);
     font-family:inherit;
   }
+  input[type=date],input[type=time]{ min-width:150px; }
   textarea{resize:vertical;}
   input:focus,textarea:focus{outline:2px solid var(--orange);outline-offset:1px;}
   input:disabled{background:#eef0f3;color:#7c8695;font-weight:700;}
@@ -249,9 +250,11 @@
     <div class="card">
       <h2>Datos generales</h2>
       <div class="body">
-        <div class="grid g4" style="margin-bottom:12px;">
+        <div class="grid g2" style="margin-bottom:12px;">
           <div class="field"><label>Fecha</label><input type="date" id="fFecha" data-key="fecha"></div>
           <div class="field"><label>Hora de atención</label><input type="time" id="fHora" data-key="hora"></div>
+        </div>
+        <div class="grid g2" style="margin-bottom:12px;">
           <div class="field"><label>Móvil N°</label><input type="text" id="fMovil" data-key="movil"></div>
           <div class="field">
             <label>N° de formulario</label>
@@ -937,6 +940,17 @@
     const btn = document.getElementById('btnExport');
     const original = btn.textContent;
     btn.textContent = 'Generando…'; btn.disabled = true;
+
+    // Abrir la pestaña YA, dentro del mismo toque del usuario (Safari/iOS bloquea
+    // aperturas que llegan después de un proceso asincrónico como armar el PDF).
+    let newTab = null;
+    try{
+      newTab = window.open('', '_blank');
+      if(newTab && newTab.document){
+        newTab.document.write('<title>Generando PDF…</title><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#556275;">Generando el PDF, un momento…</body>');
+      }
+    }catch(e){ newTab = null; }
+
     const el = document.querySelector('.sheet');
     const nro = (document.getElementById('fFormNro').value || 'HCE').replace(/[\/\\]/g,'-');
     const filename = 'EMCOR_' + nro + '.pdf';
@@ -949,13 +963,21 @@
       pagebreak: { mode: ['css','legacy'] }
     };
     function finish(){ btn.textContent = original; btn.disabled = false; }
+    function fallbackPrint(){
+      if(newTab && !newTab.closed) newTab.close();
+      window.print();
+    }
     try{
       document.body.classList.add('pdf-mode');
-      html2pdf().set(opt).from(el).save()
-        .then(()=>{ document.body.classList.remove('pdf-mode'); finish(); })
-        .catch(()=>{ document.body.classList.remove('pdf-mode'); finish(); window.print(); });
+      html2pdf().set(opt).from(el).toPdf().output('bloburl')
+        .then((pdfUrl)=>{
+          document.body.classList.remove('pdf-mode'); finish();
+          if(newTab && !newTab.closed){ newTab.location.href = pdfUrl; }
+          else { window.open(pdfUrl, '_blank'); }
+        })
+        .catch(()=>{ document.body.classList.remove('pdf-mode'); finish(); fallbackPrint(); });
     }catch(e){
-      document.body.classList.remove('pdf-mode'); finish(); window.print();
+      document.body.classList.remove('pdf-mode'); finish(); fallbackPrint();
     }
   });
   document.getElementById('btnReset').addEventListener('click', ()=>{
