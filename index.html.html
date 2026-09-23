@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>EMCOR — Registro de Atención Médica</title>
+<style>
+  :root{
+    --navy:#163a63;
+    --navy-dark:#0f2a49;
+    --orange:#f2701b;
+    --paper:#f4f5f7;
+    --card:#ffffff;
+    --ink:#1c2b3a;
+    --line:#c7ccd4;
+    --line-soft:#e2e5ea;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:"Helvetica Neue",Arial,sans-serif;}
+  .toolbar{
+    position:sticky;top:0;z-index:50;
+    background:var(--navy);color:#fff;
+    display:flex;align-items:center;gap:12px;
+    padding:10px 16px;box-shadow:0 2px 8px rgba(0,0,0,.25);
+  }
+  .toolbar .brand{font-weight:800;letter-spacing:.5px;font-size:18px;margin-right:auto;}
+  .toolbar .brand small{display:block;font-weight:500;font-size:10px;letter-spacing:1.5px;opacity:.75;}
+  .toolbar button{
+    border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--orange);color:#fff;}
+  .btn-ghost{background:rgba(255,255,255,.12);color:#fff;}
+  .draftbanner{
+    max-width:900px;margin:10px auto 0;padding:9px 14px;
+    background:#fff4e6;border:1px solid #f3c98f;border-radius:10px;
+    font-size:12.5px;color:#7a4c12;display:none;
+  }
+  .draftbanner.show{display:block;}
+  .helper{
+    max-width:900px;margin:10px auto 0;padding:10px 16px;
+    background:#eef4fb;border:1px solid #cfe0f2;border-radius:10px;
+    font-size:13px;color:#2c4a6e;line-height:1.5;
+  }
+  .sheet{max-width:900px;margin:16px auto 60px;padding:0 16px;}
+  .card{
+    background:var(--card);border-radius:12px;
+    box-shadow:0 2px 10px rgba(20,30,50,.08);
+    margin-bottom:16px;overflow:hidden;
+    page-break-inside:avoid;
+  }
+  .card h2{
+    margin:0;background:var(--navy);color:#fff;
+    font-size:14px;padding:10px 16px;letter-spacing:.3px;
+  }
+  .card .body{padding:16px;}
+  .grid{display:grid;gap:12px;}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr 1fr 1fr;}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+  @media (max-width:640px){ .g3,.g4{grid-template-columns:1fr 1fr;} }
+  label{display:block;font-size:11.5px;font-weight:700;color:#556275;
+    text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+  input[type=text],input[type=number],input[type=date],input[type=time],input[type=tel],textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:8px;
+    padding:11px 10px;font-size:16px;background:#fff;color:var(--ink);
+    font-family:inherit;
+  }
+  textarea{resize:vertical;}
+  input:focus,textarea:focus{outline:2px solid var(--orange);outline-offset:1px;}
+  input:disabled{background:#eef0f3;color:#7c8695;font-weight:700;}
+  .field{margin-bottom:2px;}
+  .lockhint{font-size:10.5px;color:#8592a0;font-weight:500;text-transform:none;margin-top:3px;}
+
+  .pillrow{display:flex;flex-wrap:wrap;gap:8px;}
+  .pill{position:relative;}
+  .pill input{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;margin:0;cursor:pointer;}
+  .pill span{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1.5px solid var(--line);border-radius:20px;
+    padding:9px 14px;font-size:13.5px;font-weight:600;color:#42505e;
+    background:#fbfbfc;
+  }
+  .pill input:checked + span{background:var(--orange);border-color:var(--orange);color:#fff;}
+
+  .sinos{display:flex;gap:8px;flex-shrink:0;}
+  .sinos .pill span{padding:8px 14px;}
+
+  .examrow{border-top:1px solid var(--line-soft);padding:10px 0;}
+  .examrow:first-child{border-top:none;padding-top:0;}
+  .examhead{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .examhead .sysname{font-weight:700;font-size:14px;color:var(--navy-dark);}
+  .writeline{display:none;margin-top:8px;}
+  .writeline.show{display:block;}
+
+  .padwrap{
+    border:1.5px dashed #b9c2cd;border-radius:10px;background:
+      repeating-linear-gradient(180deg, transparent 0, transparent 27px, #eef1f4 28px);
+    position:relative;touch-action:none;
+  }
+  .padwrap canvas{display:block;width:100%;touch-action:none;}
+  .padtools{display:flex;justify-content:flex-end;margin-top:6px;}
+  .padtools button{
+    border:1px solid var(--line);background:#fff;color:#5b6b7a;
+    border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;
+  }
+  .h-sm{height:70px;}
+  .h-md{height:120px;}
+  .h-lg{height:180px;}
+  .h-xl{height:230px;}
+
+  table.vitals{width:100%;border-collapse:collapse;}
+  table.vitals th{
+    background:var(--navy);color:#fff;font-size:11px;padding:8px 4px;
+    text-transform:uppercase;letter-spacing:.3px;
+  }
+  table.vitals td{padding:4px;border-bottom:1px solid var(--line-soft);}
+  table.vitals input{padding:9px 4px;text-align:center;font-size:14.5px;}
+  .addrow{margin-top:8px;}
+  .addrow button{
+    width:100%;border:1.5px dashed var(--orange);color:var(--orange);
+    background:#fff5ee;border-radius:8px;padding:10px;font-weight:700;
+    font-size:13px;cursor:pointer;
+  }
+
+  .sigblock{display:grid;grid-template-columns:1fr;gap:20px;}
+  @media (min-width:760px){ .sigblock{grid-template-columns:1fr 1fr 1fr;} }
+  .sigcard{text-align:center;}
+  .sigcard label{text-align:left;}
+  .sigcard .caption{
+    margin-top:8px;font-size:12px;font-weight:700;color:var(--navy-dark);
+    border-top:2px solid var(--ink);padding-top:6px;
+  }
+
+  .flexrow{display:flex;gap:10px;align-items:flex-start;}
+  .flexrow .grow{flex:1;position:relative;}
+  .flexrow .fixed{width:150px;flex-shrink:0;}
+  .diaglist{
+    position:absolute;left:0;right:0;top:100%;margin-top:4px;
+    background:#fff;border:1.5px solid var(--line);border-radius:8px;
+    box-shadow:0 6px 16px rgba(20,30,50,.15);z-index:20;
+    max-height:220px;overflow-y:auto;display:none;
+  }
+  .diaglist.show{display:block;}
+  .diaglist div{padding:9px 12px;font-size:13.5px;cursor:pointer;border-bottom:1px solid var(--line-soft);}
+  .diaglist div:last-child{border-bottom:none;}
+  .diaglist div:hover{background:#fff0e4;}
+  .diaglist b{color:var(--navy-dark);}
+
+  .footnote{text-align:center;font-size:11px;color:#8592a0;margin:20px 0 40px;}
+
+  @page{ size:A4; margin:12mm; }
+  @media print{
+    .toolbar,.helper,.draftbanner,.addrow,.padtools,.diaglist,.no-print{display:none !important;}
+    body{background:#fff;}
+    .sheet{margin:0;max-width:none;padding:0;}
+    .card{box-shadow:none;border:1px solid #d7dbe0;}
+    input,textarea{border:1px solid #aab1bb !important;}
+  }
+
+  .modaloverlay{
+    position:fixed;inset:0;background:rgba(10,20,30,.6);
+    display:none;align-items:center;justify-content:center;z-index:200;padding:20px;
+  }
+  .modaloverlay.show{display:flex;}
+  .modalcard{
+    background:#fff;border-radius:14px;padding:22px;max-width:380px;width:100%;
+    box-shadow:0 10px 40px rgba(0,0,0,.3);
+  }
+  .modalcard h3{margin:0 0 10px;color:var(--navy-dark);font-size:17px;}
+  .modalcard p{font-size:13px;color:#556275;line-height:1.5;margin:0 0 14px;}
+  .reconfiglink{
+    display:block;text-align:center;font-size:11px;color:#98a3b0;margin-top:-10px;margin-bottom:30px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <div class="brand">EMCOR<small>EMERGENCIAS MÉDICAS · HCE</small></div>
+    <button class="btn-ghost" id="btnReset">Nueva planilla</button>
+    <button class="btn-primary" id="btnExport">Exportar a PDF</button>
+  </div>
+
+
+  <div class="modaloverlay" id="tabletModal">
+    <div class="modalcard">
+      <h3>Configuración de esta tablet</h3>
+      <p>Elegí la letra que identifica a este móvil/tablet. Se usa en la numeración de las historias clínicas
+      (por ejemplo <b>B/026-0001</b>) y no hace falta volver a elegirla en el uso diario.</p>
+      <div class="pillrow" style="justify-content:center;margin-bottom:14px;">
+        <label class="pill"><input type="radio" name="tabletLetterChoice" value="B"><span>B</span></label>
+        <label class="pill"><input type="radio" name="tabletLetterChoice" value="U"><span>U</span></label>
+      </div>
+      <div class="flexrow" style="margin-bottom:14px;">
+        <div class="grow"><input type="text" id="customLetterInput" placeholder="Otra letra (opcional)" maxlength="3" style="text-align:center;"></div>
+      </div>
+      <button class="btn-primary" id="btnSaveLetter" style="width:100%;padding:12px;border-radius:8px;">Guardar y continuar</button>
+    </div>
+  </div>
+
+  <div class="draftbanner" id="draftBanner">Se restauró una atención en curso, guardada automáticamente en este dispositivo.</div>
+
+  <div class="helper no-print">
+    Escribí a mano con el lápiz en las zonas rayadas. En los campos blancos con recuadro podés tipear o usar Scribble
+    del lápiz. Lo que vas cargando se guarda solo en esta tablet por si se cierra la página. Al terminar, tocá
+    <b>Exportar a PDF</b>.
+  </div>
+
+  <div class="sheet">
+
+    <!-- DATOS GENERALES -->
+    <div class="card">
+      <h2>Datos generales</h2>
+      <div class="body">
+        <div class="grid g4" style="margin-bottom:12px;">
+          <div class="field"><label>Fecha</label><input type="date" id="fFecha" data-key="fecha"></div>
+          <div class="field"><label>Hora de atención</label><input type="time" id="fHora" data-key="hora"></div>
+          <div class="field"><label>Móvil N°</label><input type="text" id="fMovil" data-key="movil"></div>
+          <div class="field">
+            <label>N° de formulario</label>
+            <input type="text" id="fFormNro" data-key="formNumber" disabled>
+            <div class="lockhint">Generado automáticamente, no editable</div>
+          </div>
+        </div>
+        <div class="grid g2" style="margin-bottom:12px;">
+          <div class="field"><label>Incidente N°</label><input type="text" id="fIncidente" data-key="incidente"></div>
+          <div class="field"><label>Domicilio</label><input type="text" id="fDomicilio" data-key="domicilio"></div>
+        </div>
+        <div class="grid g2" style="margin-bottom:12px;">
+          <div class="field"><label>Nombre institución (si corresponde)</label><input type="text" id="fInstitucion" data-key="institucion"></div>
+          <div class="field">
+            <label>Coseguro</label>
+            <div class="pillrow" style="margin-bottom:8px;">
+              <label class="pill"><input type="radio" name="coseguro" value="NO" data-key="coseguroSiNo"><span>No</span></label>
+              <label class="pill"><input type="radio" name="coseguro" value="SI" data-key="coseguroSiNo"><span>Sí</span></label>
+            </div>
+            <div id="coseguroMontoWrap" class="writeline">
+              <input type="text" id="fCoseguroMonto" data-key="coseguroMonto" placeholder="$">
+            </div>
+          </div>
+        </div>
+        <div class="grid g2" style="margin-bottom:12px;">
+          <div class="field"><label>Afiliado — Apellido y nombre</label><input type="text" id="fAfiliado" data-key="afiliado"></div>
+          <div class="field"><label>Tel.</label><input type="tel" id="fTelAfiliado" data-key="telAfiliado"></div>
+        </div>
+        <div class="grid g4">
+          <div class="field"><label>Edad</label><input type="number" id="fEdad" data-key="edad"></div>
+          <div class="field">
+            <label>Sexo</label>
+            <div class="pillrow">
+              <label class="pill"><input type="radio" name="sexo" value="F" data-key="sexo"><span>F</span></label>
+              <label class="pill"><input type="radio" name="sexo" value="M" data-key="sexo"><span>M</span></label>
+            </div>
+          </div>
+          <div class="field"><label>DNI N°</label><input type="text" id="fDni" data-key="dni"></div>
+          <div class="field"><label>Obra social</label><input type="text" id="fObraSocial" data-key="obraSocial"></div>
+        </div>
+        <div class="grid g2" style="margin-top:12px;">
+          <div class="field"><label>N° afiliado</label><input type="text" id="fNroAfiliado" data-key="nroAfiliado"></div>
+          <div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOTIVO Y CALIFICACION -->
+    <div class="card">
+      <h2>Motivo de consulta y calificación del llamado</h2>
+      <div class="body">
+        <label>Motivo de consulta</label>
+        <div class="padwrap h-sm" data-pad data-key="padMotivo"></div>
+        <div class="padtools"><button data-clear>Borrar</button></div>
+
+        <label style="margin-top:14px;">Calificación del llamado</label>
+        <div class="pillrow">
+          <label class="pill"><input type="radio" name="calif" value="EMERG" data-key="calificacion"><span>Emergencia</span></label>
+          <label class="pill"><input type="radio" name="calif" value="URG" data-key="calificacion"><span>Urgencia</span></label>
+          <label class="pill"><input type="radio" name="calif" value="CONS" data-key="calificacion"><span>Consulta</span></label>
+          <label class="pill"><input type="radio" name="calif" value="TRASL" data-key="calificacion"><span>Traslado</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTECEDENTES -->
+    <div class="card">
+      <h2>Antecedentes y medicación previa</h2>
+      <div class="body">
+        <label>Antecedentes</label>
+        <div class="pillrow" id="antecedentesGroup">
+          <label class="pill"><input type="checkbox" value="Ninguno" data-key="antecedentes"><span>Ninguno</span></label>
+          <label class="pill"><input type="checkbox" value="Diabetes" data-key="antecedentes"><span>Diabetes</span></label>
+          <label class="pill"><input type="checkbox" value="HTA" data-key="antecedentes"><span>HTA</span></label>
+          <label class="pill"><input type="checkbox" value="Enf. cardíaca" data-key="antecedentes"><span>Enf. cardíaca</span></label>
+          <label class="pill"><input type="checkbox" value="Asma" data-key="antecedentes"><span>Asma</span></label>
+          <label class="pill"><input type="checkbox" value="ACV" data-key="antecedentes"><span>ACV</span></label>
+          <label class="pill"><input type="checkbox" value="Alzheimer" data-key="antecedentes"><span>Alzheimer</span></label>
+          <label class="pill"><input type="checkbox" value="Alergias" data-key="antecedentes"><span>Alergias</span></label>
+          <label class="pill"><input type="checkbox" value="Convulsiones" data-key="antecedentes"><span>Convulsiones</span></label>
+          <label class="pill"><input type="checkbox" value="Cirugías previas" data-key="antecedentes"><span>Cirugías previas</span></label>
+          <label class="pill"><input type="checkbox" value="Cáncer" data-key="antecedentes"><span>Cáncer</span></label>
+          <label class="pill"><input type="checkbox" value="Tabaquismo" data-key="antecedentes"><span>Tabaquismo</span></label>
+          <label class="pill"><input type="checkbox" value="Alcoholismo" data-key="antecedentes"><span>Alcoholismo</span></label>
+        </div>
+        <div class="field" style="margin-top:10px;"><label>Otros antecedentes</label><input type="text" id="fOtrosAntec" data-key="otrosAntecedentes"></div>
+
+        <div class="grid g2" style="margin-top:14px;align-items:start;">
+          <div>
+            <label>Medicación previa</label>
+            <div class="pillrow">
+              <label class="pill"><input type="radio" name="medPrevia" value="NO" data-key="medPrevia"><span>No</span></label>
+              <label class="pill"><input type="radio" name="medPrevia" value="SI" data-key="medPrevia"><span>Sí</span></label>
+            </div>
+          </div>
+          <div class="field"><label>Detalle (si corresponde)</label>
+            <textarea id="fMedDetalle" data-key="medDetalle" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNOS VITALES -->
+    <div class="card">
+      <h2>Signos vitales</h2>
+      <div class="body">
+        <div style="overflow-x:auto;">
+          <table class="vitals" id="vitalsTable">
+            <thead>
+              <tr>
+                <th>Hora</th><th>F.C.</th><th>T.A.</th><th>F.R.</th><th>T°</th>
+                <th>Ll. cap.</th><th>Sat O2</th><th>Glucemia mg%</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="addrow"><button id="btnAddRow">+ Agregar registro de signos vitales</button></div>
+      </div>
+    </div>
+
+    <!-- ANTECEDENTE ENF ACTUAL -->
+    <div class="card">
+      <h2>Antecedente de la enfermedad actual</h2>
+      <div class="body">
+        <div class="padwrap h-lg" data-pad data-key="padEnfActual"></div>
+        <div class="padtools"><button data-clear>Borrar</button></div>
+      </div>
+    </div>
+
+    <!-- EXAMEN FISICO -->
+    <div class="card">
+      <h2>Examen físico</h2>
+      <div class="body" id="examenBody"></div>
+    </div>
+
+    <!-- ECG -->
+    <div class="card">
+      <h2>Electrocardiograma</h2>
+      <div class="body">
+        <div class="pillrow" style="margin-bottom:10px;">
+          <label class="pill"><input type="radio" name="ecg" value="NO" data-key="ecgSiNo"><span>No</span></label>
+          <label class="pill"><input type="radio" name="ecg" value="SI" data-key="ecgSiNo"><span>Sí</span></label>
+        </div>
+        <div class="writeline" id="ecgWrite">
+          <div class="pillrow" style="margin-bottom:10px;">
+            <label class="pill"><input type="radio" name="ecgTipo" value="SIN" data-key="ecgTipo"><span>Sin alteraciones</span></label>
+            <label class="pill"><input type="radio" name="ecgTipo" value="CON" data-key="ecgTipo"><span>Con alteraciones</span></label>
+          </div>
+          <label>Informe de ECG</label>
+          <textarea id="fEcgInforme" data-key="ecgInforme" rows="3" placeholder="Se completa solo al elegir «Sin alteraciones»; también podés editarlo o tipearlo vos."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRATAMIENTO -->
+    <div class="card">
+      <h2>Tratamiento efectuado</h2>
+      <div class="body">
+        <div class="padwrap h-xl" data-pad data-key="padTratamiento"></div>
+        <div class="padtools"><button data-clear>Borrar</button></div>
+      </div>
+    </div>
+
+    <!-- EVOLUCION -->
+    <div class="card">
+      <h2>Evolución</h2>
+      <div class="body">
+        <label>¿Responde al tratamiento efectuado?</label>
+        <div class="pillrow">
+          <label class="pill"><input type="radio" name="evolucion" value="SI" data-key="evolSiNo"><span>Sí</span></label>
+          <label class="pill"><input type="radio" name="evolucion" value="NO" data-key="evolSiNo"><span>No</span></label>
+        </div>
+        <div class="writeline" id="evolWrite" style="margin-top:10px;">
+          <label>¿Por qué no respondió al tratamiento?</label>
+          <div class="padwrap h-md" data-pad data-key="padEvolucion"></div>
+          <div class="padtools"><button data-clear>Borrar</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INDICACIONES -->
+    <div class="card">
+      <h2>Indicaciones <span style="font-weight:400;">(incluir signos de alarma y evolución eventual)</span></h2>
+      <div class="body">
+        <div class="padwrap h-xl" data-pad data-key="padIndicaciones"></div>
+        <div class="padtools"><button data-clear>Borrar</button></div>
+      </div>
+    </div>
+
+    <!-- DIAGNOSTICO Y DESTINO -->
+    <div class="card">
+      <h2>Diagnóstico y destino</h2>
+      <div class="body">
+        <label>Diagnóstico presuntivo</label>
+        <div class="flexrow" style="margin-bottom:12px;">
+          <div class="grow">
+            <input type="text" id="fDiagnostico" data-key="diagnostico" placeholder="Escribí para buscar en el listado CIE-10…" autocomplete="off">
+            <div class="diaglist" id="diagList"></div>
+          </div>
+          <div class="fixed"><input type="text" id="fDiagCodigo" data-key="diagCodigo" placeholder="Código CIE-10"></div>
+        </div>
+        <a href="#" id="toggleAddCode" class="no-print" style="font-size:12px;color:var(--navy-dark);font-weight:600;">+ Agregar código CIE-10 nuevo</a>
+        <div id="addCodeForm" class="writeline" style="margin-top:10px;">
+          <div class="grid g2" style="margin-bottom:10px;">
+            <div class="field"><label>Código</label><input type="text" id="newCieCode" placeholder="p. ej. K30"></div>
+            <div class="field"><label>Diagnóstico</label><input type="text" id="newCieDesc" placeholder="p. ej. Dispepsia"></div>
+          </div>
+          <button class="btn-primary no-print" id="btnSaveCode" style="border-radius:8px;padding:9px 16px;">Guardar código en esta tablet</button>
+        </div>
+
+        <div class="grid g2">
+          <div>
+            <label>Traslado / internación / observación</label>
+            <div class="pillrow">
+              <label class="pill"><input type="radio" name="traslado" value="NO" data-key="traslado"><span>No</span></label>
+              <label class="pill"><input type="radio" name="traslado" value="SI" data-key="traslado"><span>Sí</span></label>
+            </div>
+          </div>
+          <div class="field"><label>Institución de destino</label><input type="text" id="fInstDestino" data-key="instDestino"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIRMAS -->
+    <div class="card">
+      <h2>Firmas</h2>
+      <div class="body">
+        <div class="sigblock">
+          <div class="sigcard">
+            <label>Médico EMCOR — apellido, nombre</label>
+            <input type="text" id="fMedicoEmcor" data-key="medicoEmcorNombre" style="margin-bottom:8px;">
+            <label>Matrícula</label>
+            <input type="text" id="fMedicoEmcorMat" data-key="medicoEmcorMatricula" style="margin-bottom:8px;">
+            <div class="padwrap h-sm" data-pad data-key="padFirmaEmcor"></div>
+            <div class="padtools"><button data-clear>Borrar</button></div>
+            <div class="caption">Firma — Médico EMCOR</div>
+          </div>
+          <div class="sigcard">
+            <label>Médico receptor — apellido, nombre</label>
+            <input type="text" id="fMedicoReceptor" data-key="medicoReceptorNombre" style="margin-bottom:8px;">
+            <label>Matrícula</label>
+            <input type="text" id="fMedicoReceptorMat" data-key="medicoReceptorMatricula" style="margin-bottom:8px;">
+            <div class="padwrap h-sm" data-pad data-key="padFirmaReceptor"></div>
+            <div class="padtools"><button data-clear>Borrar</button></div>
+            <div class="caption">Firma — Médico receptor</div>
+          </div>
+          <div class="sigcard">
+            <label>Paciente / familia / tercero</label>
+            <input type="text" id="fPacienteNombre" data-key="pacienteNombre" placeholder="Apellido y nombre" style="margin-bottom:8px;">
+            <div class="padwrap h-sm" data-pad data-key="padFirmaPaciente"></div>
+            <div class="padtools"><button data-clear>Borrar</button></div>
+            <div class="caption">Firma — Paciente / familia / tercero</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footnote">EMCOR Emergencias Médicas — Registro de Atención Médica — <span id="footYear"></span></div>
+    <a href="#" id="reconfigTablet" class="reconfiglink no-print">Configurar letra de esta tablet</a>
+  </div>
+
+<script>
+(function(){
+  // ================= Año / N° de formulario =================
+  const now = new Date();
+  const yearFull = now.getFullYear();
+  const yearPart = String(yearFull).slice(-3);
+  document.getElementById('footYear').textContent = yearFull;
+
+  const LETTER_KEY = 'emcor_hce_tablet_letter';
+  function getLetter(){ return localStorage.getItem(LETTER_KEY); }
+  function setLetter(l){ localStorage.setItem(LETTER_KEY, l); }
+  function loadSeq(){
+    let s = parseInt(localStorage.getItem('emcor_hce_seq')||'0',10);
+    if(!s || s<1) s=1;
+    return s;
+  }
+  function formatFormNumber(seq){ return getLetter() + '/' + yearPart + '-' + String(seq).padStart(4,'0'); }
+  function newFormNumber(){
+    const seq = loadSeq();
+    localStorage.setItem('emcor_hce_seq', String(seq+1));
+    return formatFormNumber(seq);
+  }
+
+  // ================= Examen físico (filas dinámicas) =================
+  const sistemas = ["Piel y mucosas","Cardiovascular","Respiratorio","Abdomen","Genitourinario","Osteoarticular","Neurológico","Otros"];
+  const examenBody = document.getElementById('examenBody');
+  sistemas.forEach((nombre, i)=>{
+    const row = document.createElement('div');
+    row.className = 'examrow';
+    const gname = 'exam_'+i;
+    row.innerHTML = `
+      <div class="examhead">
+        <div class="sysname">${nombre}</div>
+        <div class="sinos">
+          <label class="pill"><input type="radio" name="${gname}" value="NO" data-key="${gname}"><span>No</span></label>
+          <label class="pill"><input type="radio" name="${gname}" value="SI" data-key="${gname}"><span>Sí</span></label>
+        </div>
+      </div>
+      <div class="writeline">
+        <div class="padwrap h-sm" data-pad data-key="padExam_${i}"></div>
+        <div class="padtools"><button data-clear>Borrar</button></div>
+      </div>`;
+    examenBody.appendChild(row);
+    const writeline = row.querySelector('.writeline');
+    row.querySelectorAll(`input[name="${gname}"]`).forEach(r=>{
+      r.addEventListener('change', ()=>{
+        if(r.value==='SI' && r.checked){ writeline.classList.add('show'); setupNewPads(writeline); }
+        else if(r.value==='NO' && r.checked){ writeline.classList.remove('show'); }
+      });
+    });
+  });
+
+  // ================= Mostrar/ocultar bloques condicionales =================
+  function wireToggle(radioName, wantedValue, boxEl, onShow){
+    document.querySelectorAll(`input[name="${radioName}"]`).forEach(r=>{
+      r.addEventListener('change', ()=>{
+        if(r.checked && r.value===wantedValue){ boxEl.classList.add('show'); if(onShow) onShow(); }
+        else if(r.checked){ boxEl.classList.remove('show'); }
+      });
+    });
+  }
+  wireToggle('ecg','SI', document.getElementById('ecgWrite'), ()=> setupNewPads(document.getElementById('ecgWrite')));
+  wireToggle('coseguro','SI', document.getElementById('coseguroMontoWrap'));
+  wireToggle('evolucion','NO', document.getElementById('evolWrite'), ()=> setupNewPads(document.getElementById('evolWrite')));
+
+  // Informe ECG automático
+  const ECG_NORMAL = 'Ritmo sinusal, frecuencia cardíaca en parámetros normales, no se observan signos de isquemia ni disturbios de repolarización.';
+  document.querySelectorAll('input[name="ecgTipo"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const ta = document.getElementById('fEcgInforme');
+      if(r.value==='SIN' && r.checked){ ta.value = ECG_NORMAL; }
+      else if(r.value==='CON' && r.checked){ if(ta.value.trim()===ECG_NORMAL) ta.value=''; }
+      saveDraft();
+    });
+  });
+
+  // ================= Vitales: filas dinámicas + hora automática =================
+  const vitalsBody = document.querySelector('#vitalsTable tbody');
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function nowHHMM(){ const d=new Date(); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+  function addVitalsRow(prefill){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="time" data-field="hora"></td>
+      <td><input type="number" placeholder="lpm" data-field="fc"></td>
+      <td><input type="text" placeholder="mmHg" data-field="ta"></td>
+      <td><input type="number" placeholder="rpm" data-field="fr"></td>
+      <td><input type="number" step="0.1" placeholder="°C" data-field="temp"></td>
+      <td><input type="text" placeholder="seg" data-field="llcap"></td>
+      <td><input type="number" placeholder="%" data-field="sato2"></td>
+      <td><input type="number" placeholder="mg%" data-field="gluc"></td>`;
+    vitalsBody.appendChild(tr);
+    const horaInput = tr.querySelector('[data-field="hora"]');
+    tr.querySelectorAll('input:not([data-field="hora"])').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        if(!horaInput.value){ horaInput.value = nowHHMM(); }
+      }, {once:false});
+    });
+    if(prefill){
+      Object.keys(prefill).forEach(k=>{
+        const el = tr.querySelector(`[data-field="${k}"]`);
+        if(el) el.value = prefill[k];
+      });
+    }
+  }
+  document.getElementById('btnAddRow').addEventListener('click', ()=>{ addVitalsRow(); saveDraft(); });
+
+  function collectVitals(){
+    const rows = [];
+    vitalsBody.querySelectorAll('tr').forEach(tr=>{
+      const row = {};
+      tr.querySelectorAll('input').forEach(inp=>{ row[inp.dataset.field] = inp.value; });
+      rows.push(row);
+    });
+    return rows;
+  }
+
+  // ================= CIE-10 (listado curado de uso prehospitalario frecuente) =================
+  const CIE10 = [
+    // Cardiovascular
+    ["B57","Chagas"],["I05","Enfermedad reumática de la válvula mitral"],
+    ["I06","Enfermedad reumática de la válvula aórtica"],["I07","Enfermedad reumática de la válvula tricúspide"],
+    ["I10","Hipertensión esencial"],["I11","Enfermedad cardíaca hipertensiva"],
+    ["I20","Angina de pecho"],["I21","Infarto agudo de miocardio"],["I26","Embolia pulmonar"],
+    ["I42","Miocardiopatía"],["I44","Bloqueo A-V y de rama izquierda"],["I47","Taquicardia paroxística"],
+    ["I49","Otras arritmias"],["I50","Insuficiencia cardíaca congestiva"],["I80","Flebitis y tromboflebitis"],
+    ["I83","Várices de miembros inferiores"],["I95","Hipotensión"],
+    // Digestivo
+    ["A09","Diarrea infecciosa"],["B15","Hepatitis aguda A"],["B16","Hepatitis aguda B"],
+    ["B18","Hepatitis viral crónica"],["B26","Parotiditis infecciosa"],["I84","Hemorroides"],
+    ["I85","Várices esofágicas"],["K02","Caries dental"],["K04","Enfermedad de la pulpa dental"],
+    ["K05","Gingivitis"],["K21","Esofagitis por reflujo"],["K25","Úlcera gástrica"],["K26","Úlcera duodenal"],
+    ["K29","Gastritis y duodenitis"],["K30","Dispepsia"],["K35","Apendicitis aguda"],["K40","Hernia inguinal"],
+    ["K41","Hernia crural"],["K42","Hernia umbilical"],["K50","Enfermedad de Crohn"],["K51","Colitis ulcerosa"],
+    ["K52","Otras gastroenteritis"],["K57","Enfermedad diverticular"],["K58","Colon irritable"],
+    ["K60","Fisura y fístula anal"],["K61","Absceso anal y rectal"],["K66","Peritonitis"],
+    ["K70","Hepatopatía alcohólica"],["K72","Insuficiencia hepática"],["K80","Colelitiasis"],
+    ["K81","Colecistitis"],["K85","Pancreatitis"],["R19","Gastroenteritis"],["T62","Intoxicación alimentaria"],
+    // Endocrinas
+    ["E03","Hipotiroidismo"],["E05","Hipertiroidismo"],["E06","Tiroiditis"],
+    ["E10","Diabetes mellitus insulinodependiente"],["E11","Diabetes mellitus no insulinodependiente"],
+    // Genitourinario
+    ["O60","Amenaza de parto prematuro"],["B58","Toxoplasmosis"],["N04","Síndrome nefrótico"],
+    ["N05","Síndrome nefrítico"],["N17","Infección urinaria alta"],["N18","Insuficiencia renal aguda"],
+    ["N20","Insuficiencia renal crónica"],["N21","Cálculo del riñón y el uréter"],
+    ["N23","Cálculo en vías urinarias inferiores"],["N30","Cólico renal"],["N34","Uretritis"],
+    ["N40","Hiperplasia prostática"],["N41","Prostatitis"],["N45","Orquiepididimitis"],
+    ["N74","Enfermedad pélvica inflamatoria aguda"],["N80","Endometriosis"],["N87","Displasia de cuello uterino"],
+    ["N92","Metrorragia"],["N94","Dismenorrea"],["N97","Infertilidad femenina"],["O03","Aborto espontáneo"],
+    ["O13","Hipertensión arterial gestacional"],["O15","Eclampsia"],["O20","Hemorragia precoz del embarazo"],
+    ["O21","Hiperemesis gravídica"],["O44","Placenta previa"],
+    // Oídos
+    ["H60","Otitis externa"],["H65","Otitis media no supurada"],["H66","Otitis media supurada"],
+    ["H81","Trastorno vestibular"],
+    // Ojo
+    ["H00","Orzuelo y chalazión"],["H10","Conjuntivitis"],["H16","Queratitis"],["H25","Cataratas"],
+    ["H33","Desprendimiento de retina"],["H36","Retinopatía"],["H40","Glaucoma"],
+    ["H52","Trastornos de la acomodación y refracción"],["H54","Ceguera"],
+    // Osteomuscular y tejido conectivo
+    ["M00","Artritis piógena"],["M05","Artritis reumatoidea"],["M10","Gota"],["M15","Poliartrosis"],
+    ["M16","Coxartrosis"],["M17","Gonartrosis"],["M20","Deformidades adquiridas de manos y pies"],
+    ["M23","Trastornos internos de la rodilla"],["M32","Lupus eritematoso sistémico"],
+    ["M40","Cifosis y lordosis"],["M41","Escoliosis"],["M50","Discopatía cervical"],["M51","Discopatía lumbar"],
+    ["M54","Cervicalgia, dorsalgia y lumbalgia"],["M65","Sinovitis y tenosinovitis"],
+    ["M66","Ruptura espontánea de sinovial y tendón"],["M75","Lesiones del hombro"],["M81","Osteoporosis"],
+    ["M86","Osteomielitis"],["M87","Osteonecrosis"],["N97.7","Fibromialgia"],
+    // Piel
+    ["A46","Erisipela"],["B01","Varicela"],["B02","Herpes zóster"],["B06","Rubéola"],
+    ["B35","Dermatomicosis"],["B86","Sarna"],["L01","Impétigo"],["L02","Forúnculo, absceso cutáneo"],
+    ["L25","Dermatitis"],["L26","Dermatitis exfoliativa"],["L29","Prurito"],["L50","Urticaria"],
+    ["L55","Quemadura solar"],["L58","Radiodermitis"],["L60","Trastornos ungueales"],
+    // Respiratorio
+    ["A15","TBC pulmonar confirmada"],["J00","Resfrío común"],["J01","Sinusitis aguda"],
+    ["J03","Faringitis aguda"],["J04","Laringotraqueítis aguda"],["J12","Neumonía viral"],
+    ["J15","Neumonía bacteriana"],["J20","Bronquitis aguda"],["J30","Rinitis alérgica"],
+    ["J32","Sinusitis crónica"],["J42","Bronquitis crónica"],["J43","Enfisema"],["J45","Asma"],
+    ["J80","SDRA"],["J81","Edema pulmonar"],["J93","Neumotórax"],
+    // Salud mental
+    ["F23","Trastornos psicóticos agudos"],["F32","Episodio depresivo"],
+    ["F33","Trastorno depresivo recurrente"],["F40","Trastorno fóbico de ansiedad"],
+    ["F41","Otros trastornos de ansiedad"],["F43","Reacción al estrés grave"],
+    ["F48","Otros trastornos neuróticos"],
+    // Sangre
+    ["D50","Anemia por déficit de hierro"],["D56","Talasemia"],["D69","Púrpura"],
+    // Síntomas y signos
+    ["R01","Soplos y otros ruidos cardíacos"],["R03","Presión sanguínea anormal sin diagnóstico"],
+    ["R05","Tos"],["R07","Dolor de garganta y del pecho"],["R10","Dolor abdominal y pélvico"],
+    ["R11","Náuseas y vómitos"],["R12","Acidez"],["R50","Fiebre de origen desconocido"],["R51","Cefalea"],
+    ["R53","Malestar y fatiga"],["R59","Adenomegalias"],
+    // Sistema nervioso
+    ["G20","Parkinson"],["G35","Esclerosis múltiple"],["G40","Epilepsia"],["G43","Migraña"],
+    ["G45","Accidente isquémico transitorio"],["G47","Trastornos del sueño"],
+    ["G50","Trastornos del trigémino"],["G51","Trastornos del facial"],
+    ["G56","Mononeuropatía de miembro superior"],["G63","Polineuropatías secundarias"],
+    ["G70","Miastenia gravis"],["G81","Hemiplejia"],["G82","Paraplejia y cuadriplejia"],
+    ["I64","Accidente cerebrovascular"],["I69","Secuelas de accidente cerebrovascular"],
+    // Traumatismos
+    ["S00","Traumatismo superficial de cabeza"],["S01","Herida de cabeza"],["S09","Traumatismo de cráneo"],
+    ["S10","Traumatismo superficial de cuello"],["S13","Luxación, esguince, torcedura de cuello"],
+    ["S20","Traumatismo superficial de tórax"],["S21","Herida de tórax"],["S22","Fractura de costillas"],
+    ["S40","Traumatismo superficial de hombro y brazo"],["S41","Herida de hombro y brazo"],
+    ["S42","Luxación, esguince de hombro y brazo"],["S50","Traumatismo superficial de brazo y codo"],
+    ["S51","Herida de antebrazo y codo"],["S52","Fractura de antebrazo y codo"],
+    ["S53","Luxación y esguince de codo"],["S60","Traumatismo superficial de muñeca y mano"],
+    ["S61","Herida de muñeca y mano"],["S62","Fractura de muñeca y mano"],
+    ["S63","Luxación y esguince de muñeca y mano"],["S70","Traumatismo superficial de cadera y muslo"],
+    ["S71","Herida de cadera y muslo"],["S72","Fractura de fémur"],["S73","Luxación y esguince de cadera"],
+    ["S79","Fractura de cadera"],["S80","Traumatismo superficial de pierna"],["S81","Herida de la pierna"],
+    ["S82","Fractura de pierna incluso tobillo"],["S83","Luxación y esguince de rodilla"],
+    ["S90","Traumatismo superficial de tobillo y pie"],["S91","Herida de tobillo y pie"],
+    ["S92","Fractura de pie excepto tobillo"],["S93","Luxación y esguince de tobillo y pie"],
+    ["T07","Politraumatismos"],["T20","Quemadura de cabeza y cuello"],["T21","Quemadura de tronco"],
+    ["T22","Quemadura de hombro y miembro superior"],["T23","Quemadura de muñeca y mano"],
+    ["T24","Quemadura de cadera y miembro inferior"],["W54","Mordedura de perro"],
+    // Tumores benignos
+    ["D12","Tumor benigno de colon y recto"],["D16","Tumor benigno de hueso y cartílago articular"],
+    ["D17","Lipomas"],["D23","Tumor benigno de piel"],["D24","Tumor benigno de mama"],
+    ["D25","Leiomioma uterino"],["D27","Tumor benigno de ovario"],
+    // Tumores malignos
+    ["C90","Leucemia"],["C82","Linfoma no Hodgkin"],["C81","Enfermedad de Hodgkin (linfoma)"],
+    ["C15","Tumor maligno de esófago"],["C16","Tumor maligno de estómago"],["C18","Tumor maligno de colon"],
+    ["C25","Tumor maligno de páncreas"],["C32","Tumor maligno de laringe"],
+    ["C33","Tumor maligno de tráquea"],["C34","Tumor maligno de bronquios y pulmón"],
+    ["C54","Tumor maligno del cuerpo del útero"],["C56","Tumor maligno de ovario"],
+    ["C61","Tumor maligno de próstata"],["C62","Tumor maligno de testículo"],
+    ["C64","Tumor maligno de riñón (excepto pelvis renal)"],["C67","Tumor maligno de vejiga urinaria"],
+    ["C71","Tumor maligno de encéfalo"],["C73","Tumor maligno de glándula tiroides"],
+    ["C79","Metástasis"],["D05","Carcinoma in situ de mama"],["D06","Carcinoma in situ de cuello uterino"]
+  ];
+  const CIE10_CUSTOM_KEY = 'emcor_hce_cie10_custom';
+  function loadCustomCIE10(){
+    try{ return JSON.parse(localStorage.getItem(CIE10_CUSTOM_KEY)||'[]'); }catch(e){ return []; }
+  }
+  function saveCustomCIE10(list){
+    try{ localStorage.setItem(CIE10_CUSTOM_KEY, JSON.stringify(list)); }catch(e){}
+  }
+  function getAllCIE10(){ return CIE10.concat(loadCustomCIE10()); }
+  function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+  const diagInput = document.getElementById('fDiagnostico');
+  const diagCode = document.getElementById('fDiagCodigo');
+  const diagList = document.getElementById('diagList');
+  diagInput.addEventListener('input', ()=>{
+    const q = norm(diagInput.value.trim());
+    if(q.length<2){ diagList.classList.remove('show'); diagList.innerHTML=''; return; }
+    const matches = getAllCIE10().filter(([c,d])=> norm(d).includes(q) || norm(c).includes(q)).slice(0,8);
+    if(!matches.length){ diagList.classList.remove('show'); diagList.innerHTML=''; return; }
+    diagList.innerHTML = matches.map(([c,d])=> `<div data-code="${c}" data-desc="${d.replace(/"/g,'&quot;')}"><b>${c}</b> — ${d}</div>`).join('');
+    diagList.classList.add('show');
+  });
+  diagList.addEventListener('click', (e)=>{
+    const item = e.target.closest('[data-code]');
+    if(!item) return;
+    diagInput.value = item.dataset.desc;
+    diagCode.value = item.dataset.code;
+    diagList.classList.remove('show');
+    saveDraft();
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.flexrow')) diagList.classList.remove('show');
+  });
+
+  // Buscar por código: si el código escrito coincide, completa el diagnóstico solo
+  diagCode.addEventListener('input', ()=>{
+    const q = norm(diagCode.value.trim());
+    if(!q) return;
+    const exact = getAllCIE10().find(([c])=> norm(c)===q);
+    if(exact){ diagInput.value = exact[1]; saveDraft(); }
+  });
+
+  // Agregar código nuevo al listado (queda guardado en esta tablet)
+  const addCodeForm = document.getElementById('addCodeForm');
+  document.getElementById('toggleAddCode').addEventListener('click', (e)=>{
+    e.preventDefault();
+    addCodeForm.classList.toggle('show');
+  });
+  document.getElementById('btnSaveCode').addEventListener('click', ()=>{
+    const code = document.getElementById('newCieCode').value.trim();
+    const desc = document.getElementById('newCieDesc').value.trim();
+    if(!code || !desc){ alert('Completá el código y el diagnóstico.'); return; }
+    const custom = loadCustomCIE10();
+    custom.push([code, desc]);
+    saveCustomCIE10(custom);
+    document.getElementById('newCieCode').value = '';
+    document.getElementById('newCieDesc').value = '';
+    addCodeForm.classList.remove('show');
+    alert('Código '+code+' guardado. Ya lo podés buscar la próxima vez.');
+  });
+
+  // ================= Lápiz / firma: canvas =================
+  function buildPad(wrap){
+    const canvas = document.createElement('canvas');
+    wrap.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const ratio = window.devicePixelRatio || 1;
+
+    function size(preserve){
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      let img = null;
+      if(preserve){ try{ img = canvas.toDataURL(); }catch(e){} }
+      canvas.width = w*ratio; canvas.height = h*ratio;
+      canvas.style.width = w+'px'; canvas.style.height = h+'px';
+      ctx.scale(ratio, ratio);
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.strokeStyle = '#163a63';
+      if(img){ const im=new Image(); im.onload=()=>ctx.drawImage(im,0,0,w,h); im.src=img; }
+    }
+    size(false);
+    window.addEventListener('resize', ()=> size(true));
+
+    let drawing = false, last = null;
+    function pos(e){
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top, p: e.pressure && e.pressure>0 ? e.pressure : 0.5 };
+    }
+    canvas.addEventListener('pointerdown', e=>{ drawing=true; canvas.setPointerCapture(e.pointerId); last=pos(e); });
+    canvas.addEventListener('pointermove', e=>{
+      if(!drawing) return;
+      const p = pos(e);
+      ctx.lineWidth = 1 + p.p*2.2;
+      ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+      last = p;
+    });
+    ['pointerup','pointercancel','pointerleave'].forEach(ev=> canvas.addEventListener(ev, ()=>{
+      if(drawing){ drawing=false; saveDraft(); }
+    }));
+
+    const clearBtn = wrap.parentElement.querySelector('[data-clear]');
+    if(clearBtn){ clearBtn.addEventListener('click', ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); saveDraft(); }); }
+    canvas._restore = function(dataUrl){
+      const im = new Image();
+      im.onload = ()=> ctx.drawImage(im,0,0, wrap.clientWidth, wrap.clientHeight);
+      im.src = dataUrl;
+    };
+    return canvas;
+  }
+  function setupNewPads(scope){
+    scope.querySelectorAll('.padwrap[data-pad]:not([data-ready])').forEach(w=>{
+      w.setAttribute('data-ready','1');
+      w._canvas = buildPad(w);
+    });
+  }
+  setupNewPads(document);
+
+  // ================= Autosave / restauración =================
+  const DRAFT_KEY = 'emcor_hce_draft';
+  function collectFields(){
+    const out = {};
+    document.querySelectorAll('[data-key]').forEach(el=>{
+      const key = el.dataset.key;
+      if(el.type==='radio'){ if(el.checked) out[key]=el.value; }
+      else if(el.type==='checkbox'){ out[key]=out[key]||[]; if(el.checked) out[key].push(el.value); }
+      else if(!el.disabled){ out[key]=el.value; }
+    });
+    return out;
+  }
+  function collectCanvases(){
+    const out = {};
+    document.querySelectorAll('.padwrap[data-pad]').forEach(w=>{
+      if(w._canvas){ try{ out[w.dataset.key] = w._canvas.toDataURL(); }catch(e){} }
+    });
+    return out;
+  }
+  let saveTimer = null;
+  function saveDraft(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      const data = {
+        formNumber: document.getElementById('fFormNro').value,
+        fields: collectFields(),
+        canvases: collectCanvases(),
+        vitals: collectVitals()
+      };
+      try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); }catch(e){}
+    }, 250);
+  }
+  document.addEventListener('input', saveDraft);
+  document.addEventListener('change', saveDraft);
+
+  function restoreDraft(data){
+    // radios / checkboxes / texto
+    Object.keys(data.fields||{}).forEach(key=>{
+      const val = data.fields[key];
+      const els = document.querySelectorAll(`[data-key="${key}"]`);
+      els.forEach(el=>{
+        if(el.type==='radio'){ el.checked = (el.value===val); if(el.checked) el.dispatchEvent(new Event('change')); }
+        else if(el.type==='checkbox'){ el.checked = Array.isArray(val) && val.includes(el.value); }
+        else if(!el.disabled){ el.value = val; }
+      });
+    });
+    // vitales
+    if(Array.isArray(data.vitals)){
+      vitalsBody.innerHTML = '';
+      data.vitals.forEach(row=> addVitalsRow(row));
+      if(!data.vitals.length) addVitalsRow();
+    }
+    // canvases (los pads ya deben existir; se crean tras el reveal de condicionales arriba)
+    setTimeout(()=>{
+      setupNewPads(document);
+      Object.keys(data.canvases||{}).forEach(key=>{
+        const w = document.querySelector(`.padwrap[data-key="${key}"]`);
+        if(w && w._canvas) w._canvas._restore(data.canvases[key]);
+      });
+    }, 30);
+  }
+
+  function startApp(){
+    let draft = null;
+    try{ draft = JSON.parse(localStorage.getItem(DRAFT_KEY)||'null'); }catch(e){}
+    if(draft){
+      document.getElementById('fFormNro').value = draft.formNumber || newFormNumber();
+      document.getElementById('draftBanner').classList.add('show');
+      restoreDraft(draft);
+    } else {
+      document.getElementById('fFormNro').value = newFormNumber();
+      addVitalsRow();
+    }
+  }
+
+  // ================= Toolbar =================
+  document.getElementById('btnExport').addEventListener('click', ()=> window.print());
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    if(confirm('¿Iniciar una planilla nueva? Se perderá todo lo cargado en esta atención.')){
+      localStorage.removeItem(DRAFT_KEY);
+      location.reload();
+    }
+  });
+
+  // ================= Configuración de tablet (letra) =================
+  const modal = document.getElementById('tabletModal');
+  function openLetterModal(){
+    modal.classList.add('show');
+    document.querySelectorAll('input[name="tabletLetterChoice"]').forEach(r=> r.checked=false);
+    document.getElementById('customLetterInput').value = '';
+  }
+  document.getElementById('btnSaveLetter').addEventListener('click', ()=>{
+    const custom = document.getElementById('customLetterInput').value.trim().toUpperCase();
+    const checked = document.querySelector('input[name="tabletLetterChoice"]:checked');
+    const letter = custom || (checked ? checked.value : '');
+    if(!letter){ alert('Elegí B, U, u otra letra para esta tablet.'); return; }
+    setLetter(letter);
+    modal.classList.remove('show');
+    startApp();
+  });
+  document.getElementById('reconfigTablet').addEventListener('click', (e)=>{
+    e.preventDefault();
+    if(confirm('Esto cambia la letra de identificación de esta tablet y borra la atención en curso guardada localmente. ¿Continuar?')){
+      localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(LETTER_KEY);
+      location.reload();
+    }
+  });
+
+  if(getLetter()){ startApp(); } else { openLetterModal(); }
+})();
+</script>
+</body>
+</html>
