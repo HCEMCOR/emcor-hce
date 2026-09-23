@@ -89,6 +89,13 @@
   }
   input[type=date],input[type=time]{ min-width:150px; }
   textarea{resize:vertical;}
+  textarea.ruled{
+    border:1.5px dashed #b9c2cd;border-radius:10px;
+    background:#fff repeating-linear-gradient(180deg, transparent 0, transparent 26px, #eef1f4 27px);
+    padding:10px 12px;font-size:15px;line-height:27px;color:var(--ink);
+    resize:none;overflow:hidden;display:block;
+  }
+  textarea.ruled:focus{outline:2px solid var(--orange);outline-offset:1px;}
   input:focus,textarea:focus{outline:2px solid var(--orange);outline-offset:1px;}
   input:disabled{background:#eef0f3;color:#7c8695;font-weight:700;}
   .field{margin-bottom:2px;}
@@ -182,8 +189,35 @@
   body.pdf-mode .addrow,
   body.pdf-mode .padtools,
   body.pdf-mode .diaglist,
-  body.pdf-mode .no-print{display:none !important;}
-  body.pdf-mode .card{box-shadow:none;border:1px solid #d7dbe0;}
+  body.pdf-mode .no-print,
+  body.pdf-mode .reconfiglink{display:none !important;}
+  body.pdf-mode .card{box-shadow:none;border:1px solid #d7dbe0;margin-bottom:4px;}
+  body.pdf-mode .card h2{padding:4px 10px;font-size:10.5px;}
+  body.pdf-mode .card .body{padding:6px 10px;}
+  body.pdf-mode label{font-size:8.5px;margin-bottom:1px;}
+  body.pdf-mode .grid{gap:4px 8px;}
+  body.pdf-mode .field{margin-bottom:0;}
+  body.pdf-mode input[type=text],body.pdf-mode input[type=number],body.pdf-mode input[type=date],
+  body.pdf-mode input[type=time],body.pdf-mode input[type=tel]{padding:3px 5px;font-size:10.5px;}
+  body.pdf-mode textarea.ruled{font-size:9.5px;line-height:14px;padding:4px 6px;
+    background:repeating-linear-gradient(180deg, transparent 0, transparent 13px, #eef1f4 14px);}
+  body.pdf-mode .pillrow{gap:4px;}
+  body.pdf-mode .pill span{padding:3px 7px;font-size:9.5px;}
+  body.pdf-mode .letterhead{padding:6px 12px;margin-bottom:4px;gap:10px;}
+  body.pdf-mode .letterhead img{height:24px;}
+  body.pdf-mode .letterhead-title{padding-left:10px;}
+  body.pdf-mode .letterhead-title div{font-size:11px;}
+  body.pdf-mode .letterhead-title small{font-size:8px;}
+  body.pdf-mode .sigblock{gap:6px;}
+  body.pdf-mode .sigcard label{margin-bottom:1px;}
+  body.pdf-mode .sigcard input{margin-bottom:3px !important;}
+  body.pdf-mode .sigcard .caption{margin-top:3px;padding-top:3px;font-size:8.5px;}
+  body.pdf-mode .footnote{margin:4px 0 2px;font-size:7.5px;}
+  body.pdf-mode .examrow{padding:4px 0;}
+  body.pdf-mode .examhead .sysname{font-size:10px;}
+  body.pdf-mode table.vitals th{padding:4px 3px;font-size:8px;}
+  body.pdf-mode table.vitals input{padding:3px 2px;font-size:9.5px;}
+  body.pdf-mode .flexrow{gap:6px;}
 
   .modaloverlay{
     position:fixed;inset:0;background:rgba(10,20,30,.6);
@@ -307,8 +341,8 @@
       <h2>Motivo de consulta y calificación del llamado</h2>
       <div class="body">
         <label>Motivo de consulta</label>
-        <div class="padwrap h-sm" data-pad data-key="padMotivo"></div>
-        <div class="padtools"><button data-clear>Borrar</button></div>
+        <textarea class="ruled" id="fMotivo" data-key="motivo" rows="2" placeholder="Escribí con el lápiz o el teclado…"></textarea>
+        <div class="padtools"><button type="button" class="clearBtn" data-clear-for="motivo">Borrar</button></div>
 
         <label style="margin-top:14px;">Calificación del llamado</label>
         <div class="pillrow">
@@ -380,8 +414,8 @@
     <div class="card">
       <h2>Antecedente de la enfermedad actual</h2>
       <div class="body">
-        <div class="padwrap h-lg" data-pad data-key="padEnfActual"></div>
-        <div class="padtools"><button data-clear>Borrar</button></div>
+        <textarea class="ruled" id="fEnfActual" data-key="enfActual" rows="4" placeholder="Escribí con el lápiz o el teclado…"></textarea>
+        <div class="padtools"><button type="button" class="clearBtn" data-clear-for="enfActual">Borrar</button></div>
       </div>
     </div>
 
@@ -405,7 +439,8 @@
             <label class="pill"><input type="radio" name="ecgTipo" value="CON" data-key="ecgTipo"><span>Con alteraciones</span></label>
           </div>
           <label>Informe de ECG</label>
-          <textarea id="fEcgInforme" data-key="ecgInforme" rows="3" placeholder="Se completa solo al elegir «Sin alteraciones»; también podés editarlo o tipearlo vos."></textarea>
+          <textarea class="ruled" id="fEcgInforme" data-key="ecgInforme" rows="3" placeholder="Se completa solo al elegir «Sin alteraciones»; también podés editarlo o tipearlo vos."></textarea>
+          <div class="padtools"><button type="button" class="clearBtn" data-clear-for="ecgInforme">Borrar</button></div>
         </div>
       </div>
     </div>
@@ -414,8 +449,8 @@
     <div class="card">
       <h2>Tratamiento efectuado</h2>
       <div class="body">
-        <div class="padwrap h-xl" data-pad data-key="padTratamiento"></div>
-        <div class="padtools"><button data-clear>Borrar</button></div>
+        <textarea class="ruled" id="fTratamiento" data-key="tratamiento" rows="5" placeholder="Escribí con el lápiz o el teclado…"></textarea>
+        <div class="padtools"><button type="button" class="clearBtn" data-clear-for="tratamiento">Borrar</button></div>
       </div>
     </div>
 
@@ -430,8 +465,8 @@
         </div>
         <div class="writeline" id="evolWrite" style="margin-top:10px;">
           <label>¿Por qué no respondió al tratamiento?</label>
-          <div class="padwrap h-md" data-pad data-key="padEvolucion"></div>
-          <div class="padtools"><button data-clear>Borrar</button></div>
+          <textarea class="ruled" id="fEvolMotivo" data-key="evolMotivo" rows="3" placeholder="Escribí con el lápiz o el teclado…"></textarea>
+          <div class="padtools"><button type="button" class="clearBtn" data-clear-for="evolMotivo">Borrar</button></div>
         </div>
       </div>
     </div>
@@ -440,8 +475,8 @@
     <div class="card">
       <h2>Indicaciones <span style="font-weight:400;">(incluir signos de alarma y evolución eventual)</span></h2>
       <div class="body">
-        <div class="padwrap h-xl" data-pad data-key="padIndicaciones"></div>
-        <div class="padtools"><button data-clear>Borrar</button></div>
+        <textarea class="ruled" id="fIndicaciones" data-key="indicaciones" rows="5" placeholder="Escribí con el lápiz o el teclado…"></textarea>
+        <div class="padtools"><button type="button" class="clearBtn" data-clear-for="indicaciones">Borrar</button></div>
       </div>
     </div>
 
@@ -542,29 +577,41 @@
 
   // ================= Examen físico (filas dinámicas) =================
   const sistemas = ["Piel y mucosas","Cardiovascular","Respiratorio","Abdomen","Genitourinario","Osteoarticular","Neurológico","Otros"];
+  const EXAMEN_NORMAL = [
+    "Piel y mucosas normocoloreadas, sin lesiones, hidratación conservada.",
+    "Ruidos cardíacos rítmicos, sin soplos audibles. Pulsos periféricos presentes y simétricos.",
+    "Murmullo vesicular conservado bilateral, sin ruidos agregados. Sin signos de dificultad respiratoria.",
+    "Abdomen blando, depresible, indoloro, sin reacción peritoneal. Ruidos hidroaéreos presentes.",
+    "Sin alteraciones visibles. Puño percusión renal bilateral negativa.",
+    "Sin deformidades ni limitación funcional. Fuerza y sensibilidad conservadas en los cuatro miembros.",
+    "Consciente, orientado en tiempo y espacio. Pupilas isocóricas y reactivas. Sin foco motor ni sensitivo.",
+    "Sin hallazgos relevantes adicionales."
+  ];
   const examenBody = document.getElementById('examenBody');
   sistemas.forEach((nombre, i)=>{
     const row = document.createElement('div');
     row.className = 'examrow';
     const gname = 'exam_'+i;
+    const tkey = 'examtxt_'+i;
     row.innerHTML = `
       <div class="examhead">
         <div class="sysname">${nombre}</div>
         <div class="sinos">
-          <label class="pill"><input type="radio" name="${gname}" value="NO" data-key="${gname}"><span>No</span></label>
-          <label class="pill"><input type="radio" name="${gname}" value="SI" data-key="${gname}"><span>Sí</span></label>
+          <label class="pill"><input type="radio" name="${gname}" value="NO" data-key="${gname}"><span>Sin alteraciones</span></label>
+          <label class="pill"><input type="radio" name="${gname}" value="SI" data-key="${gname}"><span>Con hallazgos</span></label>
         </div>
       </div>
-      <div class="writeline">
-        <div class="padwrap h-sm" data-pad data-key="padExam_${i}"></div>
-        <div class="padtools"><button data-clear>Borrar</button></div>
-      </div>`;
+      <textarea class="ruled" data-key="${tkey}" rows="2" placeholder="Hallazgos de ${nombre.toLowerCase()}…" style="margin-top:8px;"></textarea>
+      <div class="padtools"><button type="button" class="clearBtn" data-clear-for="${tkey}">Borrar</button></div>`;
     examenBody.appendChild(row);
-    const writeline = row.querySelector('.writeline');
+    const ta = row.querySelector('textarea');
     row.querySelectorAll(`input[name="${gname}"]`).forEach(r=>{
       r.addEventListener('change', ()=>{
-        if(r.value==='SI' && r.checked){ writeline.classList.add('show'); setupNewPads(writeline); }
-        else if(r.value==='NO' && r.checked){ writeline.classList.remove('show'); }
+        if(r.value==='NO' && r.checked){ ta.value = EXAMEN_NORMAL[i]; autosize(ta); saveDraft(); }
+        else if(r.value==='SI' && r.checked){
+          if(ta.value.trim()===EXAMEN_NORMAL[i]){ ta.value=''; autosize(ta); }
+          ta.focus();
+        }
       });
     });
   });
@@ -578,9 +625,9 @@
       });
     });
   }
-  wireToggle('ecg','SI', document.getElementById('ecgWrite'), ()=> setupNewPads(document.getElementById('ecgWrite')));
+  wireToggle('ecg','SI', document.getElementById('ecgWrite'));
   wireToggle('coseguro','SI', document.getElementById('coseguroMontoWrap'));
-  wireToggle('evolucion','NO', document.getElementById('evolWrite'), ()=> setupNewPads(document.getElementById('evolWrite')));
+  wireToggle('evolucion','NO', document.getElementById('evolWrite'));
 
   // Informe ECG automático
   const ECG_NORMAL = 'Ritmo sinusal, frecuencia cardíaca en parámetros normales, no se observan signos de isquemia ni disturbios de repolarización.';
@@ -589,6 +636,7 @@
       const ta = document.getElementById('fEcgInforme');
       if(r.value==='SIN' && r.checked){ ta.value = ECG_NORMAL; }
       else if(r.value==='CON' && r.checked){ if(ta.value.trim()===ECG_NORMAL) ta.value=''; }
+      autosize(ta);
       saveDraft();
     });
   });
@@ -860,6 +908,23 @@
   }
   setupNewPads(document);
 
+  // ================= Textareas de escritura: autoajuste de alto + borrado =================
+  function autosize(ta){
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(ta.scrollHeight, 44) + 'px';
+  }
+  function wireAutosize(ta){
+    autosize(ta);
+    ta.addEventListener('input', ()=> autosize(ta));
+  }
+  document.querySelectorAll('textarea').forEach(wireAutosize);
+  document.querySelectorAll('.clearBtn[data-clear-for]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const el = document.querySelector(`[data-key="${btn.dataset.clearFor}"]`);
+      if(el){ el.value=''; autosize(el); el.focus(); saveDraft(); }
+    });
+  });
+
   // ================= Autosave / restauración =================
   const DRAFT_KEY = 'emcor_hce_draft';
   function collectFields(){
@@ -903,7 +968,7 @@
       els.forEach(el=>{
         if(el.type==='radio'){ el.checked = (el.value===val); if(el.checked) el.dispatchEvent(new Event('change')); }
         else if(el.type==='checkbox'){ el.checked = Array.isArray(val) && val.includes(el.value); }
-        else if(!el.disabled){ el.value = val; }
+        else if(!el.disabled){ el.value = val; if(el.tagName==='TEXTAREA') autosize(el); }
       });
     });
     // vitales
@@ -955,7 +1020,7 @@
     const nro = (document.getElementById('fFormNro').value || 'HCE').replace(/[\/\\]/g,'-');
     const filename = 'EMCOR_' + nro + '.pdf';
     const opt = {
-      margin: 8,
+      margin: 6,
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
@@ -969,13 +1034,20 @@
     }
     try{
       document.body.classList.add('pdf-mode');
+      document.querySelectorAll('textarea').forEach(autosize);
       html2pdf().set(opt).from(el).toPdf().output('bloburl')
         .then((pdfUrl)=>{
-          document.body.classList.remove('pdf-mode'); finish();
+          document.body.classList.remove('pdf-mode');
+          document.querySelectorAll('textarea').forEach(autosize);
+          finish();
           if(newTab && !newTab.closed){ newTab.location.href = pdfUrl; }
           else { window.open(pdfUrl, '_blank'); }
         })
-        .catch(()=>{ document.body.classList.remove('pdf-mode'); finish(); fallbackPrint(); });
+        .catch(()=>{
+          document.body.classList.remove('pdf-mode');
+          document.querySelectorAll('textarea').forEach(autosize);
+          finish(); fallbackPrint();
+        });
     }catch(e){
       document.body.classList.remove('pdf-mode'); finish(); fallbackPrint();
     }
